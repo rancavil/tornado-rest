@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 
 import tornado.ioloop
-import tornadows.rest
+import pyrestful.rest
 		
-from tornadows.rest  import get, post
+from pyrestful.rest  import get, post
 		
-class MyRestService(tornadows.rest.RestHandler):
+class MyRestService(pyrestful.rest.RestHandler):
 	@get(_resource="echo",_format="JSON",_types=[str,int])
 	def echo(self,name,age):
 		d = {"message":{"name":name,"age":age}}
@@ -14,7 +14,7 @@ class MyRestService(tornadows.rest.RestHandler):
 		
 if __name__ == '__main__':
 	try:
-		app = tornadows.rest.RestService(MyRestService)
+		app = pyrestful.rest.RestService(MyRestService)
 		app.listen(8881)
 		tornado.ioloop.IOLoop.instance().start()
 	except KeyboardInterrupt:
