@@ -3,7 +3,6 @@
 
 import tornado.ioloop
 import pyrestful.rest
-import xml.dom.minidom
 
 from pyrestful.rest  import get, post
 

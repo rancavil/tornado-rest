@@ -145,6 +145,20 @@ class RestHandler(tornado.web.RequestHandler):
 				pars.append(None)
 				
 		return pars
+
+	def _verify_operation_attrs(self,operation,method,path):
+		""" Verifies what the attributes are validates """
+		if callable(operation) and self._get_attr(operation,'_method') == method and self._get_attr(operation,'_service_name') == path:
+			return True
+		else:
+			return False
+
+	def _get_attr(self,operation,attr_name):
+		""" Verifies if the operation has the attribute and get its value """
+		if hasattr(operation,attr_name):
+			return getattr(operation,attr_name)
+		else
+			return None
 	
 	def _exe(self, method):
 		""" Executes the python function for the Rest Service """
@@ -152,39 +166,32 @@ class RestHandler(tornado.web.RequestHandler):
 		
 		for operations in dir(self):
 			operation = getattr(self,operations)
-			if callable(operation) and hasattr(operation,'_service_name') and hasattr(operation,'_method') and getattr(operation,'_method') == method:
+
+			if self._verify_operation_attrs(operation,method,path):
 				params = self._get_params(method,getattr(operation,'_service_param'))
-				params_from_request = None
-				if hasattr(operation,'_format') and getattr(operation,'_format') == 'JSON' and getattr(operation,'_service_name') == path:
+				format = self._get_operation_attr(operation,'_format')
+
+				if format == 'JSON':
 					self.set_header("Content-Type","application/json")
-					if len(params) > 0:
-						params_from_request = self._parse_params(params)
-					
-					types    = getattr(operation,'_types')
-					params   = getattr(operation,'_params')
-					pars     = self._genera_params(types,params,params_from_request)
-					
-					response = operation(*pars)
-					
-					if isinstance(response,dict):
-						self.write(response)
-					else:
-						raise tornado.web.HTTPError(505,'Error : response is not a json document')
-				elif hasattr(operation,'_format') and getattr(operation,'_format') == 'XML' and getattr(operation,'_service_name') == path:
+				elif format == 'XML':
 					self.set_header("Content-Type","text/xml")
-					if len(params) > 0:
-						params_from_request = self._parse_params(params)
+
+				types  = getattr(operation,'_types')
+				params = getattr(operation,'_params')
+				params_from_request = None
+				if len(params) > 0:
+					params_from_request = self._parse_params(params)
 					
-					types    = getattr(operation,'_types')
-					params   = getattr(operation,'_params')
-					pars     = self._genera_params(types,params,params_from_request)
-					
-					response = operation(*pars)
-					
-					if isinstance(response,xml.dom.minidom.Document):
-						self.write(response.toxml())
-					else:
-						raise tornado.web.HTTPError(505,'Error : response is not a xml document')
+				pars = self._genera_params(types,params,params_from_request)
+				
+				response = operation(*pars)
+
+				if isinstance(response,dict) or isinstance(response,xml.dom.minidom.Document):
+					self.write(response)
+				else:
+					raise tornado.web.HTTPError(500,'Internal Server Error : response is not %s document'%format)
+			else:
+				raise tornado.web.HTTPError(500,'Internal Server Error : in the operations attributes')	
 
 	@classmethod
 	def get_services(self):
