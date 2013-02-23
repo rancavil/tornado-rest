@@ -146,7 +146,7 @@ class RestHandler(tornado.web.RequestHandler):
 				
 		return pars
 
-	def _verify_operation_attrs(self,operation,method,path):
+	def _verify_rest_operation(self,operation,method,path):
 		""" Verifies what the attributes are validates """
 		if callable(operation) and self._get_attr(operation,'_method') == method and self._get_attr(operation,'_service_name') == path:
 			return True
@@ -167,7 +167,7 @@ class RestHandler(tornado.web.RequestHandler):
 		for operations in dir(self):
 			operation = getattr(self,operations)
 
-			if self._verify_operation_attrs(operation,method,path):
+			if self._verify_rest_operation(operation,method,path):
 				params = self._get_params(method,getattr(operation,'_service_param'))
 				format = self._get_operation_attr(operation,'_format')
 
@@ -190,8 +190,6 @@ class RestHandler(tornado.web.RequestHandler):
 					self.write(response)
 				else:
 					raise tornado.web.HTTPError(500,'Internal Server Error : response is not %s document'%format)
-			else:
-				raise tornado.web.HTTPError(500,'Internal Server Error : in the operations attributes')	
 
 	@classmethod
 	def get_services(self):
