@@ -169,7 +169,7 @@ class RestHandler(tornado.web.RequestHandler):
 
 			if self._verify_rest_operation(operation,method,path):
 				params = self._get_params(method,getattr(operation,'_service_param'))
-				format = self._get_operation_attr(operation,'_format')
+				format = self._get_attr(operation,'_format')
 
 				if format == 'JSON':
 					self.set_header("Content-Type","application/json")
