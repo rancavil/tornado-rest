@@ -16,12 +16,9 @@
 
 import httplib
 import json
-import urllib
 
-params = urllib.urlencode({'user_id':1,'name':'rodrigo','age':39})
-headers = {"Content-type": "application/x-www-form-urlencoded"}
 conn = httplib.HTTPConnection("localhost:8881")
-conn.request('POST','/datosPOST',params,headers)
+conn.request('GET','/echo?name=rodrigo&age=30')
 
 resp = conn.getresponse()
 data = resp.read()

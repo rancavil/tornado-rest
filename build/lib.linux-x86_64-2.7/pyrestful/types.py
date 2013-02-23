@@ -14,16 +14,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import httplib
-import json
-import urllib
+# -*- coding: utf-8 -*-
 
-params = urllib.urlencode({'user_id':1,'name':'rodrigo','age':39})
-headers = {"Content-type": "application/x-www-form-urlencoded"}
-conn = httplib.HTTPConnection("localhost:8881")
-conn.request('POST','/datosPOST',params,headers)
-
-resp = conn.getresponse()
-data = resp.read()
-json_data = json.loads(data)
-print json_data
+from datetime import date
+boolean = str

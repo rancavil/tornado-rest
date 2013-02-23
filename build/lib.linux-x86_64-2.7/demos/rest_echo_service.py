@@ -14,16 +14,23 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import httplib
-import json
-import urllib
+# -*- coding: utf-8 -*-
 
-params = urllib.urlencode({'user_id':1,'name':'rodrigo','age':39})
-headers = {"Content-type": "application/x-www-form-urlencoded"}
-conn = httplib.HTTPConnection("localhost:8881")
-conn.request('POST','/datosPOST',params,headers)
-
-resp = conn.getresponse()
-data = resp.read()
-json_data = json.loads(data)
-print json_data
+import tornado.ioloop
+import pyrestful.rest
+		
+from pyrestful.rest  import get, post
+		
+class MyRestService(pyrestful.rest.RestHandler):
+	@get(_resource="echo",_format="JSON",_types=[str,int])
+	def echo(self,name,age):
+		d = {"message":{"name":name,"age":age}}
+		return d
+		
+if __name__ == '__main__':
+	try:
+		app = pyrestful.rest.RestService(MyRestService)
+		app.listen(8881)
+		tornado.ioloop.IOLoop.instance().start()
+	except KeyboardInterrupt:
+		print "\nStop the service"
