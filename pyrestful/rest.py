@@ -157,7 +157,7 @@ class RestHandler(tornado.web.RequestHandler):
 		""" Verifies if the operation has the attribute and get its value """
 		if hasattr(operation,attr_name):
 			return getattr(operation,attr_name)
-		else
+		else:
 			return None
 	
 	def _exe(self, method):
