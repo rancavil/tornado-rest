@@ -17,7 +17,7 @@
 import httplib
 import json
 
-param_id_user = raw_input('Id de usuario :')
+param_id_user = raw_input('Id de usuario : ')
 
 conn = httplib.HTTPConnection("localhost:8881")
 conn.request('GET','/user/'+param_id_user)
