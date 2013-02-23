@@ -162,13 +162,13 @@ class RestHandler(tornado.web.RequestHandler):
 	
 	def _exe(self, method):
 		""" Executes the python function for the Rest Service """
-		path   = self.request.path.split('/')[1]
+		path = self.request.path.split('/')[1]
 		
 		for operations in dir(self):
 			operation = getattr(self,operations)
 
 			if self._verify_rest_operation(operation,method,path):
-				params = self._get_params(method,getattr(operation,'_service_param'))
+				params_from_operation = self._get_params(method,getattr(operation,'_service_param'))
 				format = self._get_attr(operation,'_format')
 
 				if format == 'JSON':
@@ -176,12 +176,13 @@ class RestHandler(tornado.web.RequestHandler):
 				elif format == 'XML':
 					self.set_header("Content-Type","text/xml")
 
+				params_from_request = None
+				if len(params_from_operation) > 0:
+					params_from_request = self._parse_params(params_from_operation)
+
 				types  = getattr(operation,'_types')
 				params = getattr(operation,'_params')
-				params_from_request = None
-				if len(params) > 0:
-					params_from_request = self._parse_params(params)
-					
+
 				pars = self._genera_params(types,params,params_from_request)
 				
 				response = operation(*pars)
