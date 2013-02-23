@@ -187,8 +187,10 @@ class RestHandler(tornado.web.RequestHandler):
 				
 				response = operation(*pars)
 
-				if isinstance(response,dict) or isinstance(response,xml.dom.minidom.Document):
+				if isinstance(response,dict):
 					self.write(response)
+				elif isinstance(response,xml.dom.minidom.Document):
+					self.write(response.toxml())
 				else:
 					raise tornado.web.HTTPError(500,'Internal Server Error : response is not %s document'%format)
 
