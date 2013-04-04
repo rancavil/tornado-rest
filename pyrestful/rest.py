@@ -165,7 +165,7 @@ class RestHandler(tornado.web.RequestHandler):
 		""" Executes the python function for the Rest Service """
 		path = self.request.path.split('/')[1]
 		
-		# Get all service name configured in the class RestHandler
+		# Get all funcion names configured in the class RestHandler
 		functions    = filter(lambda op: hasattr(getattr(self,op),'_service_name') == True, dir(self))
 		# Get all http methods configured in the class RestHandler
 		http_methods = map(lambda op: getattr(getattr(self,op),'_method'), functions)
@@ -218,5 +218,5 @@ class RestService(tornado.web.Application):
 		services = rest.get_services()
 		svs = []
 		for s in services:
-			svs.append((r'/'+s+'[/0-9a-zA-Z]*',rest))
+			svs.append((r'/'+s+'[/0-9a-zA-Z_-]*',rest))
 		tornado.web.Application.__init__(self,svs)		
