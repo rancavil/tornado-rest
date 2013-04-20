@@ -23,7 +23,7 @@ except ImportError:
 
 distutils.core.setup(
 	name='pyrestful',
-	version = '0.1.alpha',
+	version = '0.2.alpha',
 	packages=['pyrestful','demos'],
 	author='Innovaser',
 	author_email='rancavil@innovaser.cl',
