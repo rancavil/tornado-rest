@@ -214,9 +214,11 @@ class RestHandler(tornado.web.RequestHandler):
 class RestService(tornado.web.Application):
 	""" Class to create Rest services in tornado web server
 	"""
-	def __init__(self, rest):
+	def __init__(self, rest, handler=None):
 		services = rest.get_services()
 		svs = []
 		for s in services:
 			svs.append((r'/'+s+'[/0-9a-zA-Z_-]*',rest))
+		if handler != None:
+			svs.append(handler)
 		tornado.web.Application.__init__(self,svs)		
