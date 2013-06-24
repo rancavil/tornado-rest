@@ -14,17 +14,27 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-import distutils.core
+# -*- coding: utf-8 -*-
 
-try:
-	import setuptools
-except ImportError:
-	pass
+import httplib
+import json
+import urllib
 
-distutils.core.setup(
-	name='pyrestful',
-	version = '0.3.alpha',
-	packages=['pyrestful','demos'],
-	author='Innovaser',
-	author_email='rancavil@innovaser.cl',
-)
+print 'Delete customer'
+print '==============='
+id_customer = raw_input('Id Customer      : ')
+
+if len(id_customer) == 0:
+	print 'You must indicates id of customer'
+else:
+	conn = httplib.HTTPConnection("localhost:8080")
+
+	conn.request('DELETE','/customer/%s'%id_customer)
+
+	resp = conn.getresponse()
+	data = resp.read()
+	if resp.status == 200:
+		json_data = json.loads(data)
+		print json_data
+	else:
+		print data

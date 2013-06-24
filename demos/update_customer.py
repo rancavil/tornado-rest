@@ -1,0 +1,44 @@
+#!/usr/bin/env python
+#
+# Copyright 2013 Rodrigo Ancavil del Pino
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+# -*- coding: utf-8 -*-
+
+import httplib
+import json
+import urllib
+
+print 'Update customer'
+print '==============='
+id_customer      = raw_input('Id Customer      : ')
+name_customer    = raw_input('Customer Name    : ')
+address_customer = raw_input('Customer Address : ')
+
+if len(id_customer) == 0 and len(name_customer) == 0 and len(address_customer) == 0:
+	print 'You must indicates id, name and address of customer'
+else:
+	params  = urllib.urlencode({'name_customer':str(name_customer),'address_customer':str(address_customer)})
+	headers = {"Content-type": "application/x-www-form-urlencoded"}
+	conn    = httplib.HTTPConnection("localhost:8080")
+
+	conn.request('PUT','/customer/%s'%id_customer,params,headers)
+
+	resp = conn.getresponse()
+	data = resp.read()
+	if resp.status == 200:
+		json_data = json.loads(data)
+		print json_data
+	else:
+		print data

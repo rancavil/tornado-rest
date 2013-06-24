@@ -18,3 +18,19 @@
 
 from datetime import date
 boolean = str
+
+def convert(value, type):
+	""" Convert / Cast function """
+	if issubclass(type,str) and not (value.upper() in ['FALSE','TRUE']):
+		return str(value)
+	elif issubclass(type,unicode):
+		return unicode(value)
+	elif issubclass(type,int):
+		return int(value)
+	elif issubclass(type,float):
+		return float(value)
+	elif issubclass(type,boolean) and (value.upper() in ['FALSE','TRUE']):
+		if str(value).upper() == 'TRUE': return True
+		elif str(value).upper() == 'FALSE': return False
+	else:
+		return value

@@ -20,55 +20,52 @@ import tornado.ioloop
 import tornado.web
 import xml.dom.minidom
 import inspect
+import re
+import functools
 
-from pyrestful.types import boolean, date
+from pyrestful import mediatypes, types
 
-def convert(value, type):
-	""" Convert / Cast function """
-	if issubclass(type,str) and not (value.upper() in ['FALSE','TRUE']):
-		return str(value)
-	elif issubclass(type,unicode):
-		return unicode(value)
-	elif issubclass(type,int):
-		return int(value)
-	elif issubclass(type,float):
-		return float(value)
-	elif issubclass(type,boolean) and (value.upper() in ['FALSE','TRUE']):
-		if str(value).upper() == 'TRUE': return True
-		elif str(value).upper() == 'FALSE': return False
-	else:
-		return value
+class PyRestfulException(Exception):
+	""" Class for PyRestful exceptions """
+	def __init__(self,message):
+		self.message = message
+	def __str__(self):
+		return repr(self.message)
 
 def config(func,method,**kwparams):
 	""" Decorator config function """
-	format = None
-	types  = None
+	path     = None
+	produces = None
+	consumes = None
+	types    = None
 
 	if len(kwparams):
-		resource = kwparams['_resource']
-		if '_format' in kwparams:
-			format = kwparams['_format']
+		path = kwparams['_path']
+		if '_produces' in kwparams:
+			produces = kwparams['_produces']
 		else:
-			format = 'JSON'
+			produces = mediatypes.APPLICATION_JSON
+		if '_consumes' in kwparams:
+			consumes = kwparams['_consumes']
 		if '_types' in kwparams:
 			types = kwparams['_types']
-		
+
 	def operation(*args,**kwargs):
 		return func(*args,**kwargs)
+
+	operation.func_name       = func.func_name
+	operation._func_params    = inspect.getargspec(func).args[1:]
+	operation._types          = types or [str]*len(operation._func_params)
+	operation._service_name   = re.findall(r"(?<=/)\w+",path)
+	operation._service_params = re.findall(r"(?<={)\w+",path)
+	operation._method         = method
+	operation._produces       = produces
+	operation._consumes       = consumes
+	operation._query_params   = re.findall(r"(?<=<)\w+",path)
+	operation._path           = path
 	
-	uri = resource.split('/')
-	service_name  = uri[0]
-	service_param = None
-	if len(uri) >= 2:
-		service_param = uri[1]
-	
-	operation.func_name      = func.func_name
-	operation._service_name  = service_name
-	operation._service_param = service_param
-	operation._params        = inspect.getargspec(func).args[1:]
-	operation._method        = method
-	operation._format        = format
-	operation._types         = types
+	if not operation._produces in [mediatypes.APPLICATION_JSON,mediatypes.APPLICATION_XML,mediatypes.TEXT_XML]:
+		raise PyRestfulException("The media type used do not exist : "+operation.func_name)
 
 	return operation
 
@@ -76,14 +73,24 @@ def get(*params, **kwparams):
 	""" Decorator for config a python function like a Rest GET verb	"""
 	def method(f):
 		return config(f,'GET',**kwparams)
-	
 	return method
 	
 def post(*params, **kwparams):
 	""" Decorator for config a python function like a Rest POST verb	"""
 	def method(f):
 		return config(f,'POST',**kwparams)
-	
+	return method
+
+def put(*params, **kwparams):
+	""" Decorator for config a python function like a Rest PUT verb	"""
+	def method(f):
+		return config(f,'PUT',**kwparams)
+	return method
+
+def delete(*params, **kwparams):
+	""" Decorator for config a python function like a Rest PUT verb	"""
+	def method(f):
+		return config(f,'DELETE',**kwparams)
 	return method
 
 class RestHandler(tornado.web.RequestHandler):
@@ -94,112 +101,105 @@ class RestHandler(tornado.web.RequestHandler):
 	def post(self):
 		""" Executes post method """
 		self._exe('POST')
-	
-	def _get_params(self, method, param=None):
-		""" Normalizes the parameters incoming in the request post or get """
-		if method.upper() == 'GET':
-			if param != None:
-				req_parse = self.request.path.split('/')
-				value     = None
-				if len(req_parse) >= 3:
-					value = str(req_parse[2])
-				query = "%s=%s"%(param.replace(':',''),value)
-				if len(self.request.query) > 0:
-					query = query+"&"+self.request.query
-				
-				return query
-			else:
-				return self.request.query
-		elif method.upper() == 'POST':
-			query = ''
-			for name in self.request.arguments.keys():
-				query += name+'='+self.get_argument(name)+'&'
-				
-			return query[0:len(query)-1]
-			
-	def _parse_params(self, params):
-		""" Parses the incoming params, generating the dictionary with param name : value """
-		parlist = params.split('&')
-		pardict = dict()
-		for p in parlist:
-			d = p.split('=')
-			if len(d) >= 2:
-				pardict[str(d[0])] = str(d[1])
-			
-		return pardict
 
-	def _genera_params(self, types, params, params_from_request):
-		""" Generates the parameters for the python function. 
-		    If there are not types (types == None) all parameters
-			are convert to str
-		"""
-		i = 0
-		pars = []
-		for p in params:
-			if p in params_from_request:
-				if types != None:
-					pars.append(convert(params_from_request[p],types[i]))
-					i+=1
-				else:
-					pars.append(str(params_from_request[p]))				
-			else:
-				pars.append(None)
-				
-		return pars
+	def put(self):
+		""" Executes put method"""
+		self._exe('PUT')
 
-	def _verify_rest_operation(self,operation,method,path):
-		""" Verifies what the attributes are validates """
-		if callable(operation) and self._get_attr(operation,'_method') == method and self._get_attr(operation,'_service_name') == path:
-			return True
-		else:
-			return False
+	def delete(self):
+		""" Executes put method"""
+		self._exe('DELETE')
 
-	def _get_attr(self,operation,attr_name):
-		""" Verifies if the operation has the attribute and get its value """
-		if hasattr(operation,attr_name):
-			return getattr(operation,attr_name)
-		else:
-			return None
-	
 	def _exe(self, method):
 		""" Executes the python function for the Rest Service """
-		path = self.request.path.split('/')[1]
+		request_path = self.request.path
+		path = request_path.split('/')
+		services_and_params = filter(lambda x: x!='',path)
 		
 		# Get all funcion names configured in the class RestHandler
 		functions    = filter(lambda op: hasattr(getattr(self,op),'_service_name') == True, dir(self))
 		# Get all http methods configured in the class RestHandler
 		http_methods = map(lambda op: getattr(getattr(self,op),'_method'), functions)
-		
+
 		if method not in http_methods:
-			raise tornado.web.HTTPError(404,'The service not have %s verb'%method)
+			raise tornado.web.HTTPError(405,'The service not have %s verb'%method)
 
 		for operation in map(lambda op: getattr(self,op), functions):
-			if self._verify_rest_operation(operation,method,path):
-				params_from_operation = self._get_params(method,getattr(operation,'_service_param'))
-				format = self._get_attr(operation,'_format')
+			service_name          = getattr(operation,"_service_name")
+			service_params        = getattr(operation,"_service_params")
+			# If the _types is not specified, assumes str types for the params
+			params_types          = getattr(operation,"_types") or [str]*len(service_params)
+			params_types          = map(lambda x,y : y if x is None else x, params_types, [str]*len(service_params))
+			produces              = getattr(operation,"_produces")
+			services_from_request = filter(lambda x: x in path,service_name)
+			query_params          = getattr(operation,"_query_params")
 
-				if format == 'JSON':
-					self.set_header("Content-Type","application/json")
-				elif format == 'XML':
-					self.set_header("Content-Type","text/xml")
+			if operation._method == self.request.method and service_name == services_from_request and len(service_params) + len(service_name) == len(services_and_params):
+				try:
+					params_values = self._find_params_value_of_url(service_name,request_path) + self._find_params_value_of_arguments(operation)
+					p_values      = self._convert_params_values(params_values, params_types)
+					response      = operation(*p_values)
+				
+					if response == None:
+						return
 
-				params_from_request = None
-				if len(params_from_operation) > 0:
-					params_from_request = self._parse_params(params_from_operation)
+					self.set_header("Content-Type",produces)
 
-				types  = self._get_attr(operation,'_types')
-				params = self._get_attr(operation,'_params')
+					if produces == mediatypes.APPLICATION_JSON and isinstance(response,dict):
+						self.write(response)
+					elif produces in [mediatypes.APPLICATION_XML,mediatypes.TEXT_XML] and isinstance(response,xml.dom.minidom.Document):
+						self.write(response.toxml())
+					else:
+						self.gen_http_error(500,"Internal Server Error : response is not %s document"%produces)
+				except Exception as detail:
+					self.gen_http_error(500,"Internal Server Error : %s"%detail)
 
-				pars = self._genera_params(types,params,params_from_request)
-			
-				response = operation(*pars)
+	def _find_params_value_of_url(self,services,url):
+		""" Find the values of path params """
+		values_of_query = list()
+		i = 0
+		url_split = url.split("/")
+		values = [item for item in url_split if item not in services and item != '']
+		for v in values:
+			if v != None:
+				values_of_query.append(v)
+				i+=1
+		return values_of_query
 
-				if isinstance(response,dict):
-					self.write(response)
-				elif isinstance(response,xml.dom.minidom.Document):
-					self.write(response.toxml())
+	def _find_params_value_of_arguments(self, operation):
+		values = []
+		if len(self.request.arguments) > 0:
+			a = operation._service_params
+			b = operation._func_params
+			params = [item for item in b if item not in a]
+			for p in params:
+				if p in self.request.arguments.keys():
+					v = self.request.arguments[p]
+					values.append(v[0])
 				else:
-					raise tornado.web.HTTPError(500,'Internal Server Error : response is not %s document'%format)
+					values.append(None)
+		elif len(self.request.arguments) == 0 and len(operation._query_params) > 0:
+			values = [None]*(len(operation._func_params) - len(operation._service_params))
+		return values
+
+
+	def _convert_params_values(self, values_list, params_types):
+		""" Converts the values to the specifics types """
+		values = list()
+		i = 0
+		for v in values_list:
+			if v != None:
+				values.append(types.convert(v,params_types[i]))
+			else:
+				values.append(v)
+			i+=1
+		return values
+
+	def gen_http_error(self,status,msg):
+		""" Generates the custom HTTP error """
+		self.clear()
+		self.set_status(status)
+		self.write("<html><body>"+str(msg)+"</body></html>")
 
 	@classmethod
 	def get_services(self):
@@ -210,17 +210,37 @@ class RestHandler(tornado.web.RequestHandler):
 			if callable(o) and hasattr(o,'_service_name'):
 				services.append(getattr(o,'_service_name'))
 		return services
-						
+
+	@classmethod
+	def get_paths(self):
+		""" Generates the resources from path (uri) to deploy the Rest Services """
+		paths = []
+		for f in dir(self):
+			o = getattr(self,f)
+			if callable(o) and hasattr(o,'_path'):
+				paths.append(getattr(o,'_path'))
+		return paths
+
 class RestService(tornado.web.Application):
-	""" Class to create Rest services in tornado web server
-	"""
-	def __init__(self, rest, handler=None, jquery=None):
-		services = rest.get_services()
+	""" Class to create Rest services in tornado web server """
+	resource = None
+	def __init__(self, rest_handlers, resource=None, handlers=None, default_host="", transforms=None, wsgi=False, **settings):
+		restservices = []
+		self.resource = resource
+		for r in rest_handlers:
+			svs = self._generateRestServices(r)
+			restservices += svs
+		if handlers != None:
+			restservices += handlers
+		tornado.web.Application.__init__(self, restservices, default_host, transforms, wsgi, **settings)
+
+	def _generateRestServices(self,rest):
 		svs = []
-		for s in services:
-			svs.append((r'/'+s+'[/0-9a-zA-Z_-]*',rest))
-		if handler != None:
-			svs.append(handler)
-		if jquery != None:
-			svs.append(jquery)
-		tornado.web.Application.__init__(self,svs)		
+		paths = rest.get_paths()
+		for p in paths:
+			s = re.sub(r"(?<={)\w+}",".*",p).replace("{","")
+			o = re.sub(r"(?<=<)\w+","",s).replace("<","").replace(">","").replace("&","").replace("?","")
+			svs.append((o,rest,self.resource))
+
+		return svs
+
