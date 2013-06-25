@@ -12,19 +12,23 @@ The API allows develop a CRUD over the resources. In this example the
 resource is Customer.
 
 GET: http://myserver.domain.com:8080/customer/{id}
+
 	GET /customer/1 HTTP/1.1
 
 POST: http://myserver.domain.com:8080/customer
+
 	POST /customer HTTP/1.1
 	Host: myserver.domain.com
 	customer_name=Rodrigo&customer_address=Santiago
 
 PUT: http://myserver.domain.com:8080/customer/{id}
+
 	PUT /customer/1 HTTP/1.1
 	Host: myserver.domain.com
 	customer_name=Rodrigo&customer_address=Santiago
 
 DELETE: http://myserver.domain.com:8080/customer/{id}
+
 	DELETE /customer/1 HTTP/1.1
 
 PyRestful implements the verbs get, post, put and delete.
