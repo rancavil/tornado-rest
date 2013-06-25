@@ -13,23 +13,31 @@ resource is Customer.
 
 GET: http://myserver.domain.com:8080/customer/{id}
 
-	GET /customer/1 HTTP/1.1
+     GET /customer/1 HTTP/1.1
+
+     GET it is equivalent to SELECT.
 
 POST: http://myserver.domain.com:8080/customer
 
-	POST /customer HTTP/1.1
-	Host: myserver.domain.com
-	customer_name=Rodrigo&customer_address=Santiago
+     POST /customer HTTP/1.1
+     Host: myserver.domain.com
+     customer_name=Rodrigo&customer_address=Santiago
+
+     POST it is equivalent to INSERT.
 
 PUT: http://myserver.domain.com:8080/customer/{id}
 
-	PUT /customer/1 HTTP/1.1
-	Host: myserver.domain.com
-	customer_name=Rodrigo&customer_address=Santiago
+     PUT /customer/1 HTTP/1.1
+     Host: myserver.domain.com
+     customer_name=Rodrigo&customer_address=Santiago
+     
+     PUT it is equivalent to UPDATE.
 
 DELETE: http://myserver.domain.com:8080/customer/{id}
 
-	DELETE /customer/1 HTTP/1.1
+     DELETE /customer/1 HTTP/1.1
+
+     DELETE it is equivalent to DELETE.
 
 PyRestful implements the verbs get, post, put and delete.
 
