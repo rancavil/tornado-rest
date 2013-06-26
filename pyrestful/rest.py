@@ -21,7 +21,6 @@ import tornado.web
 import xml.dom.minidom
 import inspect
 import re
-import functools
 
 from pyrestful import mediatypes, types
 
@@ -147,8 +146,10 @@ class RestHandler(tornado.web.RequestHandler):
 
 					if produces == mediatypes.APPLICATION_JSON and isinstance(response,dict):
 						self.write(response)
+						self.finish()
 					elif produces in [mediatypes.APPLICATION_XML,mediatypes.TEXT_XML] and isinstance(response,xml.dom.minidom.Document):
 						self.write(response.toxml())
+						self.finish()
 					else:
 						self.gen_http_error(500,"Internal Server Error : response is not %s document"%produces)
 				except Exception as detail:
@@ -182,7 +183,6 @@ class RestHandler(tornado.web.RequestHandler):
 			values = [None]*(len(operation._func_params) - len(operation._service_params))
 		return values
 
-
 	def _convert_params_values(self, values_list, params_types):
 		""" Converts the values to the specifics types """
 		values = list()
@@ -200,6 +200,7 @@ class RestHandler(tornado.web.RequestHandler):
 		self.clear()
 		self.set_status(status)
 		self.write("<html><body>"+str(msg)+"</body></html>")
+		self.finish()
 
 	@classmethod
 	def get_services(self):
@@ -243,4 +244,3 @@ class RestService(tornado.web.Application):
 			svs.append((o,rest,self.resource))
 
 		return svs
-
