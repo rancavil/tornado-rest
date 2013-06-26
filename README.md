@@ -21,6 +21,7 @@ POST: http://myserver.domain.com:8080/customer
 
      POST /customer HTTP/1.1
      Host: myserver.domain.com
+     
      customer_name=Rodrigo&customer_address=Santiago
 
      POST it is equivalent to INSERT.
