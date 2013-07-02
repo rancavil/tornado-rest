@@ -21,6 +21,7 @@ import tornado.web
 import xml.dom.minidom
 import inspect
 import re
+import json
 
 from pyrestful import mediatypes, types
 
@@ -144,8 +145,11 @@ class RestHandler(tornado.web.RequestHandler):
 
 					self.set_header("Content-Type",produces)
 
-					if produces == mediatypes.APPLICATION_JSON and (isinstance(response,dict) or isinstance(response,list)):
+					if produces == mediatypes.APPLICATION_JSON and isinstance(response,dict):
 						self.write(response)
+						self.finish()
+					elif produces == mediatypes.APPLICATION_JSON and isinstance(response,list):
+						self.write(json.dumps(response))
 						self.finish()
 					elif produces in [mediatypes.APPLICATION_XML,mediatypes.TEXT_XML] and isinstance(response,xml.dom.minidom.Document):
 						self.write(response.toxml())
