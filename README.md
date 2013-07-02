@@ -30,6 +30,7 @@ PUT: http://myserver.domain.com:8080/customer/{id}
 
      PUT /customer/1 HTTP/1.1
      Host: myserver.domain.com
+     
      customer_name=Rodrigo&customer_address=Santiago
      
      PUT it is equivalent to UPDATE.

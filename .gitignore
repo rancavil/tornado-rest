@@ -1,1 +1,3 @@
 *.pyc
+/pyrestful.egg-info/
+/dist/

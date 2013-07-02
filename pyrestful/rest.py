@@ -144,7 +144,7 @@ class RestHandler(tornado.web.RequestHandler):
 
 					self.set_header("Content-Type",produces)
 
-					if produces == mediatypes.APPLICATION_JSON and isinstance(response,dict):
+					if produces == mediatypes.APPLICATION_JSON and (isinstance(response,dict) or isinstance(response,list)):
 						self.write(response)
 						self.finish()
 					elif produces in [mediatypes.APPLICATION_XML,mediatypes.TEXT_XML] and isinstance(response,xml.dom.minidom.Document):
