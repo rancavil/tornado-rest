@@ -117,7 +117,7 @@ class RestHandler(tornado.web.RequestHandler):
 		services_and_params = filter(lambda x: x!='',path)
 		
 		# Get all funcion names configured in the class RestHandler
-		functions    = filter(lambda op: hasattr(getattr(self,op),'_service_name') == True, dir(self))
+		functions    = filter(lambda op: hasattr(getattr(self,op),'_service_name') == True and inspect.ismethod(getattr(self,op)) == True, dir(self))
 		# Get all http methods configured in the class RestHandler
 		http_methods = map(lambda op: getattr(getattr(self,op),'_method'), functions)
 
