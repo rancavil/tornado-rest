@@ -59,6 +59,10 @@ Go to the directory and install.
      $ cd tornado-rest-master
      $ python setup.py install
 
+Or you can install it using:
+     
+     $ pip install pyrestful
+
 Echo Rest Service
 -----------------
 
