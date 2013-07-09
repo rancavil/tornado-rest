@@ -63,6 +63,8 @@ Or you can install it using:
      
      $ pip install pyrestful
 
+(https://pypi.python.org/pypi/pyrestful/0.3.1.alpha)
+
 Echo Rest Service
 -----------------
 
