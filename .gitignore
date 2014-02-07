@@ -1,3 +1,5 @@
 *.pyc
-/pyrestful.egg-info/
-/dist/
+pyrestful.egg-info/
+dist/
+build/
+venv/
