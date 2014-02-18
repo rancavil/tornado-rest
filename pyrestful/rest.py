@@ -18,6 +18,7 @@
 
 import tornado.ioloop
 import tornado.web
+import tornado.wsgi
 import xml.dom.minidom
 import inspect
 import re
@@ -226,6 +227,18 @@ class RestHandler(tornado.web.RequestHandler):
 				paths.append(getattr(o,'_path'))
 		return paths
 
+	@classmethod
+	def get_handlers(self):
+		""" Gets a list with (path, handler) """
+		svs = []
+		paths = self.get_paths()
+		for p in paths:
+			s = re.sub(r"(?<={)\w+}",".*",p).replace("{","")
+			o = re.sub(r"(?<=<)\w+","",s).replace("<","").replace(">","").replace("&","").replace("?","")
+			svs.append((o,self))
+
+		return svs
+
 class RestService(tornado.web.Application):
 	""" Class to create Rest services in tornado web server """
 	resource = None
@@ -238,6 +251,29 @@ class RestService(tornado.web.Application):
 		if handlers != None:
 			restservices += handlers
 		tornado.web.Application.__init__(self, restservices, default_host, transforms, wsgi, **settings)
+
+	def _generateRestServices(self,rest):
+		svs = []
+		paths = rest.get_paths()
+		for p in paths:
+			s = re.sub(r"(?<={)\w+}",".*",p).replace("{","")
+			o = re.sub(r"(?<=<)\w+","",s).replace("<","").replace(">","").replace("&","").replace("?","")
+			svs.append((o,rest,self.resource))
+
+		return svs
+
+class WSGIRestService(tornado.wsgi.WSGIApplication):
+	""" Class to create WSGI Rest services in tornado web server """
+	resource = None
+	def __init__(self, rest_handlers, resource=None, handlers=None, default_host="", **settings):
+		restservices = []
+		self.resource = resource
+		for r in rest_handlers:
+			svs = self._generateRestServices(r)
+			restservices += svs
+		if handlers != None:
+			restservices += handlers
+		tornado.wsgi.WSGIApplication.__init__(self, restservices, default_host, **settings)
 
 	def _generateRestServices(self,rest):
 		svs = []
