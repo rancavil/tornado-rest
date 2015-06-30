@@ -242,7 +242,7 @@ class RestHandler(tornado.web.RequestHandler):
 class RestService(tornado.web.Application):
 	""" Class to create Rest services in tornado web server """
 	resource = None
-	def __init__(self, rest_handlers, resource=None, handlers=None, default_host="", transforms=None, wsgi=False, **settings):
+	def __init__(self, rest_handlers, resource=None, handlers=None, default_host="", transforms=None, **settings):
 		restservices = []
 		self.resource = resource
 		for r in rest_handlers:
@@ -250,7 +250,7 @@ class RestService(tornado.web.Application):
 			restservices += svs
 		if handlers != None:
 			restservices += handlers
-		tornado.web.Application.__init__(self, restservices, default_host, transforms, wsgi, **settings)
+		tornado.web.Application.__init__(self, restservices, default_host, transforms, **settings)
 
 	def _generateRestServices(self,rest):
 		svs = []
