@@ -83,9 +83,26 @@ class CustomerDataBase(object):
 		else:
 			return False
 
+	def all(self):
+		return self.customerDB
+
 class CustomerResource(pyrestful.rest.RestHandler):
 	def initialize(self, database):
 		self.database = database
+
+	@get(_path="/customer", _produces=mediatypes.APPLICATION_JSON)
+	def getListCustomer(self):
+		customers = self.database.all()
+
+		response = dict()
+		for k in customers.keys():
+			cust = dict()
+			cust['id_customer'] = customers[k].getId_Customer()
+			cust['name_customer'] = customers[k].getName_Customer()
+			cust['address_customer'] = customers[k].getAddress_Customer()
+			response[k] = { k : cust }
+
+		return response
 
 	@get(_path="/customer/{id_customer}", _types=[int], _produces=mediatypes.APPLICATION_JSON)
 	def getCustomer(self, id_customer):

@@ -25,6 +25,7 @@ import re
 import json
 
 from pyrestful import mediatypes, types
+from pyconvert.pyconv import convertXML2OBJ, convert2XML, convertJSON2OBJ, convert2JSON
 
 class PyRestfulException(Exception):
 	""" Class for PyRestful exceptions """
@@ -132,6 +133,7 @@ class RestHandler(tornado.web.RequestHandler):
 			params_types          = getattr(operation,"_types") or [str]*len(service_params)
 			params_types          = map(lambda x,y : y if x is None else x, params_types, [str]*len(service_params))
 			produces              = getattr(operation,"_produces")
+			consumes              = getattr(operation,"_consumes")
 			services_from_request = filter(lambda x: x in path,service_name)
 			query_params          = getattr(operation,"_query_params")
 
@@ -139,12 +141,25 @@ class RestHandler(tornado.web.RequestHandler):
 				try:
 					params_values = self._find_params_value_of_url(service_name,request_path) + self._find_params_value_of_arguments(operation)
 					p_values      = self._convert_params_values(params_values, params_types)
-					response      = operation(*p_values)
+
+					if consumes == mediatypes.APPLICATION_XML:
+						param_obj = convertXML2OBJ(params_types[0],xml.dom.minidom.parseString(self.request.body).documentElement)
+						p_values.append(param_obj)
+					elif consumes == mediatypes.APPLICATION_JSON:
+						param_obj = convertJSON2OBJ(params_types[0],json.loads(self.request.body))
+						p_values.append(param_obj)
+
+					response = operation(*p_values)
 				
 					if response == None:
 						return
 
 					self.set_header("Content-Type",produces)
+
+					if produces == mediatypes.APPLICATION_JSON and hasattr(response,'__module__'):
+						response = convert2JSON(response)
+					elif produces == mediatypes.APPLICATION_XML and hasattr(response,'__module__'):
+						response = convert2XML(response)
 
 					if produces == mediatypes.APPLICATION_JSON and isinstance(response,dict):
 						self.write(response)

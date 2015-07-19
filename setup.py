@@ -25,7 +25,7 @@ packages=['tornado','pyconvert']
 
 distutils.core.setup(
 	name='pyrestful',
-	version = '0.3.3',
+	version = '0.4.0',
 	packages=['pyrestful','demos'],
 	author='Innovaser',
 	author_email='rancavil@innovaser.cl',
