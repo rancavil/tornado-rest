@@ -46,7 +46,7 @@ PyRestful implements the verbs get, post, put and delete.
 Installation
 ------------
 
-You must have installed python 2.7 and tornado-3.x.
+You must have installed python 2.7.
 
 Download the api from github (https://github.com/rancavil/tornado-rest/archive/master.zip).
 
