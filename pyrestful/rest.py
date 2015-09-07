@@ -126,7 +126,6 @@ class RestHandler(tornado.web.RequestHandler):
 
 		if method not in http_methods:
 			raise tornado.web.HTTPError(405,'The service not have %s verb'%method)
-
 		for operation in list(map(lambda op: getattr(self,op), functions)):
 			service_name          = getattr(operation,"_service_name")
 			service_params        = getattr(operation,"_service_params")
