@@ -16,9 +16,16 @@
 
 # -*- coding: utf-8 -*-
 
-import httplib
 import json
-import urllib
+import sys
+
+if sys.version_info > (3,):
+        raw_input = input
+        import http.client as httplib
+        import urllib.parse as urllib
+else:
+        import httplib
+        import urllib
 
 print('Delete customer')
 print('===============')
