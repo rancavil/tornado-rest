@@ -5,6 +5,8 @@ pyRestful is an API to develop restful services with Tornado Web Server.
 
 We made changes from the last version to improve it and make it more easy.
 
+The last version works with Python 2 and 3.
+
 Installation
 ------------
 
