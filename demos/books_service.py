@@ -23,11 +23,11 @@ from pyrestful import mediatypes
 from pyrestful.rest import get, post, put, delete
 
 class Book(object):
-	isbn = long
+	isbn = int
 	title = str
 
 class BookResource(pyrestful.rest.RestHandler):
-	@get(_path="/books/json/{isbn}", _types=[long], _produces=mediatypes.APPLICATION_JSON)
+	@get(_path="/books/json/{isbn}", _types=[int], _produces=mediatypes.APPLICATION_JSON)
 	def getBookJSON(self, isbn):
 		book = Book()
 		book.isbn = isbn
@@ -35,7 +35,7 @@ class BookResource(pyrestful.rest.RestHandler):
 
 		return book
 
-	@get(_path="/books/xml/{isbn}", _types=[long], _produces=mediatypes.APPLICATION_XML)
+	@get(_path="/books/xml/{isbn}", _types=[int], _produces=mediatypes.APPLICATION_XML)
 	def getBookXML(self, isbn):
 		book = Book()
 		book.isbn = isbn
@@ -55,9 +55,9 @@ class BookResource(pyrestful.rest.RestHandler):
 
 if __name__ == '__main__':
 	try:
-		print "Start the service"
+		print("Start the service")
 		app = pyrestful.rest.RestService([BookResource])
 		app.listen(8080)
 		tornado.ioloop.IOLoop.instance().start()
 	except KeyboardInterrupt:
-		print "\nStop the service" 
+		print("\nStop the service")

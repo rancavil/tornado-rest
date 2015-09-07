@@ -20,14 +20,14 @@ import httplib
 import json
 import urllib
 
-print 'Update customer'
-print '==============='
+print('Update customer')
+print('===============')
 id_customer      = raw_input('Id Customer      : ')
 name_customer    = raw_input('Customer Name    : ')
 address_customer = raw_input('Customer Address : ')
 
 if len(id_customer) == 0 and len(name_customer) == 0 and len(address_customer) == 0:
-	print 'You must indicates id, name and address of customer'
+	print('You must indicates id, name and address of customer')
 else:
 	params  = urllib.urlencode({'name_customer':str(name_customer),'address_customer':str(address_customer)})
 	headers = {"Content-type": "application/x-www-form-urlencoded"}
@@ -38,7 +38,7 @@ else:
 	resp = conn.getresponse()
 	data = resp.read()
 	if resp.status == 200:
-		json_data = json.loads(data)
-		print json_data
+		json_data = json.loads(data.decode('utf-8'))
+		print(json_data)
 	else:
-		print data
+		print(data.decode('utf-8'))

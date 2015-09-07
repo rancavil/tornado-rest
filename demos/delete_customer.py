@@ -20,12 +20,12 @@ import httplib
 import json
 import urllib
 
-print 'Delete customer'
-print '==============='
+print('Delete customer')
+print('===============')
 id_customer = raw_input('Id Customer      : ')
 
 if len(id_customer) == 0:
-	print 'You must indicates id of customer'
+	print('You must indicates id of customer')
 else:
 	conn = httplib.HTTPConnection("localhost:8080")
 
@@ -34,7 +34,7 @@ else:
 	resp = conn.getresponse()
 	data = resp.read()
 	if resp.status == 200:
-		json_data = json.loads(data)
-		print json_data
+		json_data = json.loads(data.decode('utf-8'))
+		print(json_data)
 	else:
-		print data
+		print(data.decode('utf-8'))

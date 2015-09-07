@@ -5,6 +5,31 @@ pyRestful is an API to develop restful services with Tornado Web Server.
 
 We made changes from the last version to improve it and make it more easy.
 
+Installation
+------------
+
+You must have installed python version 2.7 or 3.4.
+
+Download the api from github (https://github.com/rancavil/tornado-rest/archive/master.zip).
+
+Unzip the file tornado-rest-master.zip
+
+     $ unzip tornado-rest-master.zip
+
+Go to the directory and install.
+
+     $ cd tornado-rest-master
+     $ python setup.py install
+
+Or you can install it using.
+     
+     $ pip install pyrestful
+
+(https://pypi.python.org/pypi/pyrestful/)
+
+Example
+-------
+
 With this API allows service development rest allowing access to resources, 
 as follows (see the demos).
 
@@ -43,27 +68,6 @@ DELETE: http://myserver.domain.com:8080/customer/{id}
 
 PyRestful implements the verbs get, post, put and delete.
 
-Installation
-------------
-
-You must have installed python 2.7.
-
-Download the api from github (https://github.com/rancavil/tornado-rest/archive/master.zip).
-
-Unzip the file tornado-rest-master.zip
-
-     $ unzip tornado-rest-master.zip
-
-Go to the directory and install.
-
-     $ cd tornado-rest-master
-     $ python setup.py install
-
-Or you can install it using.
-     
-     $ pip install pyrestful
-
-(https://pypi.python.org/pypi/pyrestful/0.3.1.alpha)
 
 Echo Rest Service
 -----------------
@@ -85,12 +89,12 @@ Write the next code and save echo_service.py file.
 
      if __name__ == '__main__':
           try:
-               print "Start the echo service"
+               print("Start the echo service")
                app = pyrestful.rest.RestService([EchoService])
                app.listen(8080)
                tornado.ioloop.IOLoop.instance().start()
           except KeyboardInterrupt:
-               print "\nStop the echo service"
+               print("\nStop the echo service")
 
 Execute the service with.
 

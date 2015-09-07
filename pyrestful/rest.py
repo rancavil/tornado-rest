@@ -23,6 +23,7 @@ import xml.dom.minidom
 import inspect
 import re
 import json
+import sys
 
 from pyrestful import mediatypes, types
 from pyconvert.pyconv import convertXML2OBJ, convert2XML, convertJSON2OBJ, convert2JSON
@@ -55,7 +56,7 @@ def config(func,method,**kwparams):
 	def operation(*args,**kwargs):
 		return func(*args,**kwargs)
 
-	operation.func_name       = func.func_name
+	operation.func_name       = func.__name__
 	operation._func_params    = inspect.getargspec(func).args[1:]
 	operation._types          = types or [str]*len(operation._func_params)
 	operation._service_name   = re.findall(r"(?<=/)\w+",path)
@@ -116,25 +117,25 @@ class RestHandler(tornado.web.RequestHandler):
 		""" Executes the python function for the Rest Service """
 		request_path = self.request.path
 		path = request_path.split('/')
-		services_and_params = filter(lambda x: x!='',path)
+		services_and_params = list(filter(lambda x: x!='',path))
 		
 		# Get all funcion names configured in the class RestHandler
-		functions    = filter(lambda op: hasattr(getattr(self,op),'_service_name') == True and inspect.ismethod(getattr(self,op)) == True, dir(self))
+		functions    = list(filter(lambda op: hasattr(getattr(self,op),'_service_name') == True and inspect.ismethod(getattr(self,op)) == True, dir(self)))
 		# Get all http methods configured in the class RestHandler
-		http_methods = map(lambda op: getattr(getattr(self,op),'_method'), functions)
+		http_methods = list(map(lambda op: getattr(getattr(self,op),'_method'), functions))
 
 		if method not in http_methods:
 			raise tornado.web.HTTPError(405,'The service not have %s verb'%method)
 
-		for operation in map(lambda op: getattr(self,op), functions):
+		for operation in list(map(lambda op: getattr(self,op), functions)):
 			service_name          = getattr(operation,"_service_name")
 			service_params        = getattr(operation,"_service_params")
 			# If the _types is not specified, assumes str types for the params
 			params_types          = getattr(operation,"_types") or [str]*len(service_params)
-			params_types          = map(lambda x,y : y if x is None else x, params_types, [str]*len(service_params))
+			params_types          = params_types + [str]*(len(service_params)-len(params_types))
 			produces              = getattr(operation,"_produces")
 			consumes              = getattr(operation,"_consumes")
-			services_from_request = filter(lambda x: x in path,service_name)
+			services_from_request = list(filter(lambda x: x in path,service_name))
 			query_params          = getattr(operation,"_query_params")
 
 			if operation._method == self.request.method and service_name == services_from_request and len(service_params) + len(service_name) == len(services_and_params):
@@ -146,7 +147,10 @@ class RestHandler(tornado.web.RequestHandler):
 						param_obj = convertXML2OBJ(params_types[0],xml.dom.minidom.parseString(self.request.body).documentElement)
 						p_values.append(param_obj)
 					elif consumes == mediatypes.APPLICATION_JSON:
-						param_obj = convertJSON2OBJ(params_types[0],json.loads(self.request.body))
+						body = self.request.body
+						if sys.version_info > (3,):
+							body = str(self.request.body,'utf-8')
+						param_obj = convertJSON2OBJ(params_types[0],json.loads(body))
 						p_values.append(param_obj)
 
 					response = operation(*p_values)

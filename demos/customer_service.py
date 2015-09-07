@@ -23,6 +23,9 @@ from pyrestful import mediatypes
 from pyrestful.rest import get, post, put, delete
 
 class Customer(object):
+	id_customer = int
+	name_customer = str
+	address_customer = str
 	def __init__(self,id_customer=0, name_customer=None, address_customer=None):
 		self.id_customer      = id_customer
 		self.name_customer    = name_customer
@@ -48,7 +51,7 @@ class CustomerDataBase(object):
 
 	def insert(self, name_customer, address_customer):
 		sequence = self.id_seq
-		customer = Customer(sequence, name_customer, address_customer)
+		customer = Customer(sequence, str(name_customer), str(address_customer))
 		self.customerDB[sequence] = customer
 		self.id_seq += 1
 
@@ -57,8 +60,8 @@ class CustomerDataBase(object):
 	def update(self,id_customer, name_customer, address_customer):
 		if self.exists(id_customer):
 			customer = self.customerDB[id_customer]
-			customer.setName_Customer(name_customer)
-			customer.setAddress_Customer(address_customer)
+			customer.setName_Customer(str(name_customer))
+			customer.setAddress_Customer(str(address_customer))
 			self.customerDB[id_customer] = customer
 			return True
 		else:
@@ -116,7 +119,7 @@ class CustomerResource(pyrestful.rest.RestHandler):
 		response['id_customer']      = customer.getId_Customer()
 		response['name_customer']    = customer.getName_Customer()
 		response['address_customer'] = customer.getAddress_Customer()
-
+		print(response)
 		return response
 
 	@post(_path="/customer", _types=[str,str], _produces=mediatypes.APPLICATION_JSON)
@@ -147,10 +150,10 @@ class CustomerResource(pyrestful.rest.RestHandler):
 
 if __name__ == '__main__':
 	try:
-		print "Start the service"
+		print("Start the service")
 		database = CustomerDataBase()
 		app = pyrestful.rest.RestService([CustomerResource], dict(database=database))
 		app.listen(8080)
 		tornado.ioloop.IOLoop.instance().start()
 	except KeyboardInterrupt:
-		print "\nStop the service" 
+		print("\nStop the service")
