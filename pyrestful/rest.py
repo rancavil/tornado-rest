@@ -46,8 +46,6 @@ def config(func,method,**kwparams):
 		path = kwparams['_path']
 		if '_produces' in kwparams:
 			produces = kwparams['_produces']
-		else:
-			produces = mediatypes.APPLICATION_JSON
 		if '_consumes' in kwparams:
 			consumes = kwparams['_consumes']
 		if '_types' in kwparams:
@@ -67,7 +65,7 @@ def config(func,method,**kwparams):
 	operation._query_params   = re.findall(r"(?<=<)\w+",path)
 	operation._path           = path
 	
-	if not operation._produces in [mediatypes.APPLICATION_JSON,mediatypes.APPLICATION_XML,mediatypes.TEXT_XML]:
+	if not operation._produces in [mediatypes.APPLICATION_JSON,mediatypes.APPLICATION_XML,mediatypes.TEXT_XML, None]:
 		raise PyRestfulException("The media type used do not exist : "+operation.func_name)
 
 	return operation
@@ -118,7 +116,10 @@ class RestHandler(tornado.web.RequestHandler):
 		request_path = self.request.path
 		path = request_path.split('/')
 		services_and_params = list(filter(lambda x: x!='',path))
-		
+		content_type = None
+		if 'Content-Type' in self.request.headers.keys():
+			content_type = self.request.headers['Content-Type']
+
 		# Get all funcion names configured in the class RestHandler
 		functions    = list(filter(lambda op: hasattr(getattr(self,op),'_service_name') == True and inspect.ismethod(getattr(self,op)) == True, dir(self)))
 		# Get all http methods configured in the class RestHandler
@@ -141,7 +142,9 @@ class RestHandler(tornado.web.RequestHandler):
 				try:
 					params_values = self._find_params_value_of_url(service_name,request_path) + self._find_params_value_of_arguments(operation)
 					p_values      = self._convert_params_values(params_values, params_types)
-
+					if consumes == None and produces == None:
+						consumes = content_type
+						produces = content_type
 					if consumes == mediatypes.APPLICATION_XML:
 						param_obj = convertXML2OBJ(params_types[0],xml.dom.minidom.parseString(self.request.body).documentElement)
 						p_values.append(param_obj)
@@ -151,7 +154,6 @@ class RestHandler(tornado.web.RequestHandler):
 							body = str(self.request.body,'utf-8')
 						param_obj = convertJSON2OBJ(params_types[0],json.loads(body))
 						p_values.append(param_obj)
-
 					response = operation(*p_values)
 				
 					if response == None:

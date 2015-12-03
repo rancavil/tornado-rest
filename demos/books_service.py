@@ -53,6 +53,11 @@ class BookResource(pyrestful.rest.RestHandler):
 		""" this is an echo...returns the same json document """
 		return book
 
+	@post(_path="/books",_types=[Book])
+	def postBook(self, book):
+		""" this is an echo, returns json or xml depending of request content-type """
+		return book
+
 if __name__ == '__main__':
 	try:
 		print("Start the service")

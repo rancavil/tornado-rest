@@ -23,6 +23,7 @@ boolean = str
 if sys.version_info > (3,):
 	long = int
 	unicode = str
+	str = bytes
 
 def convert(value, type):
 	""" Convert / Cast function """
