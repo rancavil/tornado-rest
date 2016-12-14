@@ -164,7 +164,8 @@ class RestHandler(tornado.web.RequestHandler):
 					if response == None:
 						return
 
-					self.set_header("Content-Type",produces)
+					if produces:
+						self.set_header("Content-Type",produces)
 
 					if manual_response:
 						return
