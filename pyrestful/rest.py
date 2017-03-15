@@ -41,6 +41,7 @@ def config(func,method,**kwparams):
 	produces = None
 	consumes = None
 	types    = None
+	manual_response = None
 
 	if len(kwparams):
 		path = kwparams['_path']
@@ -50,6 +51,8 @@ def config(func,method,**kwparams):
 			consumes = kwparams['_consumes']
 		if '_types' in kwparams:
 			types = kwparams['_types']
+		if '_manual_response' in kwparams:
+			manual_response = kwparams['_manual_response']
 
 	def operation(*args,**kwargs):
 		return func(*args,**kwargs)
@@ -64,6 +67,7 @@ def config(func,method,**kwparams):
 	operation._consumes       = consumes
 	operation._query_params   = re.findall(r"(?<=<)\w+",path)
 	operation._path           = path
+	operation._manual_response = manual_response
 	
 	if not operation._produces in [mediatypes.APPLICATION_JSON,mediatypes.APPLICATION_XML,mediatypes.TEXT_XML, None]:
 		raise PyRestfulException("The media type used do not exist : "+operation.func_name)
@@ -147,6 +151,7 @@ class RestHandler(tornado.web.RequestHandler):
 			consumes              = getattr(operation,"_consumes")
 			services_from_request = list(filter(lambda x: x in path,service_name))
 			query_params          = getattr(operation,"_query_params")
+			manual_response       = getattr(operation,"_manual_response")
 
 			if operation._method == self.request.method and service_name == services_from_request and len(service_params) + len(service_name) == len(services_and_params):
 				try:
@@ -169,7 +174,11 @@ class RestHandler(tornado.web.RequestHandler):
 					if response == None:
 						return
 
-					self.set_header("Content-Type",produces)
+					if produces:
+						self.set_header("Content-Type",produces)
+
+					if manual_response:
+						return
 
 					if produces == mediatypes.APPLICATION_JSON and hasattr(response,'__module__'):
 						response = convert2JSON(response)
