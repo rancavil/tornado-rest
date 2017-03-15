@@ -88,6 +88,12 @@ def put(*params, **kwparams):
 		return config(f,'PUT',**kwparams)
 	return method
 
+def patch(*params, **kwparams):
+        """ Decorator for config a python function like a Rest PATCH verb """
+        def method(f):
+            return config(f, 'PATCH', **kwparams)
+        return method
+
 def delete(*params, **kwparams):
 	""" Decorator for config a python function like a Rest PUT verb	"""
 	def method(f):
@@ -106,6 +112,10 @@ class RestHandler(tornado.web.RequestHandler):
 	def put(self):
 		""" Executes put method"""
 		self._exe('PUT')
+
+        def patch(self):
+                """ Executes patch method"""
+                self._exe('PATCH')
 
 	def delete(self):
 		""" Executes put method"""
