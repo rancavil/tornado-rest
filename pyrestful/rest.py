@@ -113,9 +113,9 @@ class RestHandler(tornado.web.RequestHandler):
 		""" Executes put method"""
 		self._exe('PUT')
 
-        def patch(self):
-                """ Executes patch method"""
-                self._exe('PATCH')
+	def patch(self):
+		""" Executes patch method"""
+		self._exe('PATCH')
 
 	def delete(self):
 		""" Executes put method"""
