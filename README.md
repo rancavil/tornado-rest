@@ -25,9 +25,7 @@ Go to the directory and install.
 
 Or you can install it using.
      
-     $ pip install pyrestful
-
-(https://pypi.python.org/pypi/pyrestful/)
+     $ pip install -U git+https://github.com/rancavil/tornado-rest.git
 
 Example
 -------
