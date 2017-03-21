@@ -167,7 +167,10 @@ class RestHandler(tornado.web.RequestHandler):
 						body = self.request.body
 						if sys.version_info > (3,):
 							body = str(self.request.body,'utf-8')
-						param_obj = convertJSON2OBJ(params_types[0],json.loads(body))
+						if params_types[0] in [dict,str]:
+							param_obj = json.loads(body)
+						else:
+							param_obj = convertJSON2OBJ(params_types[0],json.loads(body))
 						p_values.append(param_obj)
 					response = operation(*p_values)
 				
