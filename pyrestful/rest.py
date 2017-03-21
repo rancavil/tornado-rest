@@ -161,7 +161,10 @@ class RestHandler(tornado.web.RequestHandler):
 						consumes = content_type
 						produces = content_type
 					if consumes == mediatypes.APPLICATION_XML:
-						param_obj = convertXML2OBJ(params_types[0],xml.dom.minidom.parseString(self.request.body).documentElement)
+						if params_types[0] in [str]:
+							param_obj = xml.dom.minidom.parseString(self.request.body)
+						else:
+							param_obj = convertXML2OBJ(params_types[0],xml.dom.minidom.parseString(self.request.body).documentElement)
 						p_values.append(param_obj)
 					elif consumes == mediatypes.APPLICATION_JSON:
 						body = self.request.body
@@ -185,7 +188,7 @@ class RestHandler(tornado.web.RequestHandler):
 
 					if produces == mediatypes.APPLICATION_JSON and hasattr(response,'__module__'):
 						response = convert2JSON(response)
-					elif produces == mediatypes.APPLICATION_XML and hasattr(response,'__module__'):
+					elif produces == mediatypes.APPLICATION_XML and hasattr(response,'__module__') and not isinstance(response,xml.dom.minidom.Document):
 						response = convert2XML(response)
 
 					if produces == mediatypes.APPLICATION_JSON and isinstance(response,dict):
