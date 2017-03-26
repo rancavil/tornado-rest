@@ -42,6 +42,7 @@ def config(func,method,**kwparams):
 	consumes = None
 	types    = None
 	manual_response = None
+	catch_fire = False
 
 	if len(kwparams):
 		path = kwparams['_path']
@@ -53,6 +54,8 @@ def config(func,method,**kwparams):
 			types = kwparams['_types']
 		if '_manual_response' in kwparams:
 			manual_response = kwparams['_manual_response']
+		if '_catch_fire' in kwparams:
+			catch_fire = kwparams['_catch_fire']
 
 	def operation(*args,**kwargs):
 		return func(*args,**kwargs)
@@ -60,17 +63,18 @@ def config(func,method,**kwparams):
 	operation.func_name       = func.__name__
 	operation._func_params    = inspect.getargspec(func).args[1:]
 	operation._types          = types or [str]*len(operation._func_params)
-	operation._service_name   = re.findall(r"(?<=/)\w+",path)
-	operation._service_params = re.findall(r"(?<={)\w+",path)
+	operation._service_name   = re.findall(r'(?<=/)\w+',path)
+	operation._service_params = re.findall(r'(?<={)\w+',path)
 	operation._method         = method
 	operation._produces       = produces
 	operation._consumes       = consumes
-	operation._query_params   = re.findall(r"(?<=<)\w+",path)
+	operation._query_params   = re.findall(r'(?<=<)\w+',path)
 	operation._path           = path
 	operation._manual_response = manual_response
+	operation._catch_fire = catch_fire
 	
 	if not operation._produces in [mediatypes.APPLICATION_JSON,mediatypes.APPLICATION_XML,mediatypes.TEXT_XML, None]:
-		raise PyRestfulException("The media type used do not exist : "+operation.func_name)
+		raise PyRestfulException('The media type used do not exist : '+operation.func_name)
 
 	return operation
 
@@ -81,7 +85,7 @@ def get(*params, **kwparams):
 	return method
 	
 def post(*params, **kwparams):
-	""" Decorator for config a python function like a Rest POST verb	"""
+	""" Decorator for config a python function like a Rest POST verb """
 	def method(f):
 		return config(f,'POST',**kwparams)
 	return method
@@ -114,15 +118,15 @@ class RestHandler(tornado.web.RequestHandler):
 		self._exe('POST')
 
 	def put(self):
-		""" Executes put method"""
+		""" Executes put method """
 		self._exe('PUT')
 
 	def patch(self):
-		""" Executes patch method"""
+		""" Executes patch method """
 		self._exe('PATCH')
 
 	def delete(self):
-		""" Executes put method"""
+		""" Executes put method """
 		self._exe('DELETE')
 
 	def _exe(self, method):
@@ -142,16 +146,17 @@ class RestHandler(tornado.web.RequestHandler):
 		if method not in http_methods:
 			raise tornado.web.HTTPError(405,'The service not have %s verb'%method)
 		for operation in list(map(lambda op: getattr(self,op), functions)):
-			service_name          = getattr(operation,"_service_name")
-			service_params        = getattr(operation,"_service_params")
+			service_name          = getattr(operation,'_service_name')
+			service_params        = getattr(operation,'_service_params')
 			# If the _types is not specified, assumes str types for the params
 			params_types          = getattr(operation,"_types") or [str]*len(service_params)
 			params_types          = params_types + [str]*(len(service_params)-len(params_types))
-			produces              = getattr(operation,"_produces")
-			consumes              = getattr(operation,"_consumes")
+			produces              = getattr(operation,'_produces')
+			consumes              = getattr(operation,'_consumes')
 			services_from_request = list(filter(lambda x: x in path,service_name))
-			query_params          = getattr(operation,"_query_params")
-			manual_response       = getattr(operation,"_manual_response")
+			query_params          = getattr(operation,'_query_params')
+			manual_response       = getattr(operation,'_manual_response')
+			catch_fire	      = getattr(operation,'_catch_fire')
 
 			if operation._method == self.request.method and service_name == services_from_request and len(service_params) + len(service_name) == len(services_and_params):
 				try:
@@ -181,7 +186,7 @@ class RestHandler(tornado.web.RequestHandler):
 						return
 
 					if produces:
-						self.set_header("Content-Type",produces)
+						self.set_header('Content-Type',produces)
 
 					if manual_response:
 						return
@@ -201,15 +206,19 @@ class RestHandler(tornado.web.RequestHandler):
 						self.write(response.toxml())
 						self.finish()
 					else:
-						self.gen_http_error(500,"Internal Server Error : response is not %s document"%produces)
+						self.gen_http_error(500,'Internal Server Error : response is not %s document'%produces)
+						if catch_fire == True:
+							raise PyRestfulException('Internal Server Error : response is not %s document'%produces)
 				except Exception as detail:
-					self.gen_http_error(500,"Internal Server Error : %s"%detail)
+					self.gen_http_error(500,'Internal Server Error : %s'%detail)
+					if catch_fire == True:
+						raise PyRestfulException(detail)
 
 	def _find_params_value_of_url(self,services,url):
 		""" Find the values of path params """
 		values_of_query = list()
 		i = 0
-		url_split = url.split("/")
+		url_split = url.split('/')
 		values = [item for item in url_split if item not in services and item != '']
 		for v in values:
 			if v != None:
@@ -249,7 +258,7 @@ class RestHandler(tornado.web.RequestHandler):
 		""" Generates the custom HTTP error """
 		self.clear()
 		self.set_status(status)
-		self.write("<html><body>"+str(msg)+"</body></html>")
+		self.write('<html><body>'+str(msg)+'</body></html>')
 		self.finish()
 
 	@classmethod
@@ -278,8 +287,8 @@ class RestHandler(tornado.web.RequestHandler):
 		svs = []
 		paths = self.get_paths()
 		for p in paths:
-			s = re.sub(r"(?<={)\w+}",".*",p).replace("{","")
-			o = re.sub(r"(?<=<)\w+","",s).replace("<","").replace(">","").replace("&","").replace("?","")
+			s = re.sub(r'(?<={)\w+}','.*',p).replace('{','')
+			o = re.sub(r'(?<=<)\w+','',s).replace('<','').replace('>','').replace('&','').replace('?','')
 			svs.append((o,self))
 
 		return svs
@@ -287,7 +296,7 @@ class RestHandler(tornado.web.RequestHandler):
 class RestService(tornado.web.Application):
 	""" Class to create Rest services in tornado web server """
 	resource = None
-	def __init__(self, rest_handlers, resource=None, handlers=None, default_host="", transforms=None, **settings):
+	def __init__(self, rest_handlers, resource=None, handlers=None, default_host='', transforms=None, **settings):
 		restservices = []
 		self.resource = resource
 		for r in rest_handlers:
@@ -301,8 +310,8 @@ class RestService(tornado.web.Application):
 		svs = []
 		paths = rest.get_paths()
 		for p in paths:
-			s = re.sub(r"(?<={)\w+}",".*",p).replace("{","")
-			o = re.sub(r"(?<=<)\w+","",s).replace("<","").replace(">","").replace("&","").replace("?","")
+			s = re.sub(r'(?<={)\w+}','.*',p).replace('{','')
+			o = re.sub(r'(?<=<)\w+','',s).replace('<','').replace('>','').replace('&','').replace('?','')
 			svs.append((o,rest,self.resource))
 
 		return svs
@@ -310,7 +319,7 @@ class RestService(tornado.web.Application):
 class WSGIRestService(tornado.wsgi.WSGIApplication):
 	""" Class to create WSGI Rest services in tornado web server """
 	resource = None
-	def __init__(self, rest_handlers, resource=None, handlers=None, default_host="", **settings):
+	def __init__(self, rest_handlers, resource=None, handlers=None, default_host='', **settings):
 		restservices = []
 		self.resource = resource
 		for r in rest_handlers:
@@ -324,8 +333,8 @@ class WSGIRestService(tornado.wsgi.WSGIApplication):
 		svs = []
 		paths = rest.get_paths()
 		for p in paths:
-			s = re.sub(r"(?<={)\w+}",".*",p).replace("{","")
-			o = re.sub(r"(?<=<)\w+","",s).replace("<","").replace(">","").replace("&","").replace("?","")
+			s = re.sub(r'(?<={)\w+}','.*',p).replace('{','')
+			o = re.sub(r'(?<=<)\w+','',s).replace('<','').replace('>','').replace('&','').replace('?','')
 			svs.append((o,rest,self.resource))
 
 		return svs
