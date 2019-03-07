@@ -5,12 +5,14 @@ pyRestful is an API to develop restful services with Tornado Web Server.
 
 We made changes from the last version to improve it and make it more easy.
 
-The last version works with Python 2 and 3.
+Last version works with Python 2 and 3+.
 
 Installation
 ------------
 
-You must have installed python version 2.7 or 3.4.
+You must have installed python version 2.7, 3.5.
+
+**Note:** We recommend using Python 3.5+.
 
 Download the api from github (https://github.com/rancavil/tornado-rest/archive/master.zip).
 
@@ -30,19 +32,18 @@ Or you can install it using.
 Example
 -------
 
-With this API allows service development rest allowing access to resources, 
-as follows (see the demos).
+This API allows develop rest services to access resources.
 
-The API allows develop a CRUD over the resources. In this example the 
+The API allows develop a CRUD (Create, Read, Update and Delete) over the resources. In this example the 
 resource is Customer.
 
-GET: http://myserver.domain.com:8080/customer/{id}
+First, start the service:
 
-     GET /customer/1 HTTP/1.1
+     $ python demos/customer_service.py
 
-     GET it is equivalent to SELECT.
+**Creating a new Customer:**
 
-POST: http://myserver.domain.com:8080/customer
+     POST: http://myserver.domain.com:8080/customer
 
      POST /customer HTTP/1.1
      Host: myserver.domain.com
@@ -51,7 +52,17 @@ POST: http://myserver.domain.com:8080/customer
 
      POST it is equivalent to INSERT.
 
-PUT: http://myserver.domain.com:8080/customer/{id}
+**Read a Customer:**
+
+     GET: http://myserver.domain.com:8080/customer/{id}
+
+     GET /customer/1 HTTP/1.1
+
+     GET it is equivalent to SELECT (READ).
+
+**Update a Customer:**
+
+     PUT: http://myserver.domain.com:8080/customer/{id}
 
      PUT /customer/1 HTTP/1.1
      Host: myserver.domain.com
@@ -60,14 +71,15 @@ PUT: http://myserver.domain.com:8080/customer/{id}
      
      PUT it is equivalent to UPDATE.
 
-DELETE: http://myserver.domain.com:8080/customer/{id}
+**Delete a Customer:**
+
+     DELETE: http://myserver.domain.com:8080/customer/{id}
 
      DELETE /customer/1 HTTP/1.1
 
      DELETE it is equivalent to DELETE.
 
 PyRestful implements the verbs get, post, put and delete.
-
 
 Echo Rest Service
 -----------------
