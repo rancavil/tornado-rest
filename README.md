@@ -41,6 +41,8 @@ First, start the service:
 
      $ python demos/customer_service.py
 
+**Note:** you can see customer_service.py is in demos folder.
+
 **Creating a new Customer:**
 
      POST: http://myserver.domain.com:8080/customer
