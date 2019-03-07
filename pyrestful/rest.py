@@ -16,6 +16,7 @@
 
 # -*- coding: utf-8 -*-
 
+import tornado
 import tornado.ioloop
 import tornado.web
 import tornado.wsgi
@@ -316,25 +317,26 @@ class RestService(tornado.web.Application):
 
 		return svs
 
-class WSGIRestService(tornado.wsgi.WSGIApplication):
-	""" Class to create WSGI Rest services in tornado web server """
-	resource = None
-	def __init__(self, rest_handlers, resource=None, handlers=None, default_host='', **settings):
-		restservices = []
-		self.resource = resource
-		for r in rest_handlers:
-			svs = self._generateRestServices(r)
-			restservices += svs
-		if handlers != None:
-			restservices += handlers
-		tornado.wsgi.WSGIApplication.__init__(self, restservices, default_host, **settings)
+if tornado.version[0] < '6':
+    class WSGIRestService(tornado.wsgi.WSGIApplication):
+        """ Class to create WSGI Rest services in tornado web server """
+        resource = None
+        def __init__(self, rest_handlers, resource=None, handlers=None, default_host='', **settings):
+            restservices = []
+            self.resource = resource
+            for r in rest_handlers:
+                svs = self._generateRestServices(r)
+                restservices += svs
+                if handlers != None:
+                    restservices += handlers
+                    tornado.wsgi.WSGIApplication.__init__(self, restservices, default_host, **settings)
 
-	def _generateRestServices(self,rest):
-		svs = []
-		paths = rest.get_paths()
-		for p in paths:
-			s = re.sub(r'(?<={)\w+}','.*',p).replace('{','')
-			o = re.sub(r'(?<=<)\w+','',s).replace('<','').replace('>','').replace('&','').replace('?','')
-			svs.append((o,rest,self.resource))
+        def _generateRestServices(self,rest):
+            svs = []
+            paths = rest.get_paths()
+            for p in paths:
+                s = re.sub(r'(?<={)\w+}','.*',p).replace('{','')
+                o = re.sub(r'(?<=<)\w+','',s).replace('<','').replace('>','').replace('&','').replace('?','')
+                svs.append((o,rest,self.resource))
 
-		return svs
+            return svs

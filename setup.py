@@ -21,11 +21,11 @@ try:
 except ImportError:
 	pass
 
-packages=['tornado','pyconvert']
+packages=['tornado>=6.0.1','pyconvert']
 
 distutils.core.setup(
 	name='pyrestful',
-	version = '0.4.2',
+	version = '0.5.0',
 	packages=['pyrestful','demos'],
 	author='Innovaser',
 	author_email='rancavil@innovaser.cl',
