@@ -27,7 +27,6 @@ Or you can install it using.
      
      $ pip install -U git+https://github.com/rancavil/tornado-rest.git
 
-If you want to see a complete example, you can go to demo folder and check [person_service.py](https://github.com/rancavil/tornado-rest/blob/master/demos/person_service.py).
 
 New release 0.5.1 
 -----------------
@@ -55,6 +54,8 @@ It was added "syntax sugar" to define services.
           def create_person_json(self,book):
                # do something with book in format json
                return {'status' : 'person created...'} 
+
+If you want to see a complete example, you can go to demo folder and check [person_service.py](https://github.com/rancavil/tornado-rest/blob/master/demos/person_service.py).
 
 Example
 -------
