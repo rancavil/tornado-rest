@@ -36,7 +36,15 @@ class PyRestfulException(Exception):
 	def __str__(self):
 		return repr(self.message)
 
-def config(func,method,**kwparams):
+def convert_format(data_format):
+        if data_format == 'json':
+            return mediatypes.APPLICATION_JSON
+        elif data_format == 'xml':
+            return mediatypes.APPLICATION_XML
+        else:
+            return None
+
+def config(func,method,*params,**kwparams):
 	""" Decorator config function """
 	path     = None
 	produces = None
@@ -45,7 +53,23 @@ def config(func,method,**kwparams):
 	manual_response = None
 	catch_fire = False
 
-	if len(kwparams):
+	if len(params) >= 1 and (len(kwparams) == 1 or len(kwparams) == 0):
+		path = params[0] # 1st param _path
+		if len(params) == 2 and isinstance(params[1],dict): # content-type
+                        if 'consumes' in params[1].keys():
+                                consumes = params[1]['consumes']
+                        if 'produces' in params[1].keys():
+                                produces = params[1]['produces']
+                        if 'format' in params[1].keys():
+                                consumes = convert_format(params[1]['format'])
+                                produces = convert_format(params[1]['format'])
+                        if 'types' in params[1].keys() and isinstance(params[1]['types'],list):
+                                types = params[1]['types']
+
+		if '_catch_fire' in kwparams:
+			catch_fire = kwparams['_catch_fire']
+
+	if len(params) == 0 and len(kwparams):
 		path = kwparams['_path']
 		if '_produces' in kwparams:
 			produces = kwparams['_produces']
@@ -74,7 +98,7 @@ def config(func,method,**kwparams):
 	operation._manual_response = manual_response
 	operation._catch_fire = catch_fire
 	
-	if not operation._produces in [mediatypes.APPLICATION_JSON,mediatypes.APPLICATION_XML,mediatypes.TEXT_XML, None]:
+	if not operation._produces in [mediatypes.APPLICATION_JSON,mediatypes.APPLICATION_XML,mediatypes.TEXT_XML,mediatypes.TEXT_PLAIN, None]:
 		raise PyRestfulException('The media type used do not exist : '+operation.func_name)
 
 	return operation
@@ -82,31 +106,31 @@ def config(func,method,**kwparams):
 def get(*params, **kwparams):
 	""" Decorator for config a python function like a Rest GET verb	"""
 	def method(f):
-		return config(f,'GET',**kwparams)
+		return config(f,'GET',*params,**kwparams)
 	return method
 	
 def post(*params, **kwparams):
 	""" Decorator for config a python function like a Rest POST verb """
 	def method(f):
-		return config(f,'POST',**kwparams)
+		return config(f,'POST',*params,**kwparams)
 	return method
 
 def put(*params, **kwparams):
 	""" Decorator for config a python function like a Rest PUT verb	"""
 	def method(f):
-		return config(f,'PUT',**kwparams)
+		return config(f,'PUT',*params,**kwparams)
 	return method
 
 def patch(*params, **kwparams):
         """ Decorator for config a python function like a Rest PATCH verb """
         def method(f):
-            return config(f, 'PATCH', **kwparams)
+            return config(f, 'PATCH',*params, **kwparams)
         return method
 
 def delete(*params, **kwparams):
 	""" Decorator for config a python function like a Rest PUT verb	"""
 	def method(f):
-		return config(f,'DELETE',**kwparams)
+		return config(f,'DELETE',*params,**kwparams)
 	return method
 
 class RestHandler(tornado.web.RequestHandler):
@@ -163,41 +187,68 @@ class RestHandler(tornado.web.RequestHandler):
 				try:
 					params_values = self._find_params_value_of_url(service_name,request_path) + self._find_params_value_of_arguments(operation)
 					p_values      = self._convert_params_values(params_values, params_types)
-					if consumes == None and produces == None:
-						consumes = content_type
-						produces = content_type
+
+					if consumes == None and content_type != None:
+                                                consumes = content_type
 					if consumes == mediatypes.APPLICATION_XML:
-						if params_types[0] in [str]:
-							param_obj = xml.dom.minidom.parseString(self.request.body)
-						else:
-							param_obj = convertXML2OBJ(params_types[0],xml.dom.minidom.parseString(self.request.body).documentElement)
-						p_values.append(param_obj)
-					elif consumes == mediatypes.APPLICATION_JSON:
+						param_obj = None
 						body = self.request.body
 						if sys.version_info > (3,):
-							body = str(self.request.body,'utf-8')
-						if params_types[0] in [dict,str]:
+							body = str(body,'utf-8')
+						if len(body) >0 and params_types[0] in [str]:
+							param_obj = xml.dom.minidom.parseString(body)
+						elif len(body)>0 :
+							param_obj = convertXML2OBJ(params_types[0],xml.dom.minidom.parseString(body).documentElement)
+						if param_obj != None:
+						        p_values.append(param_obj)
+					elif consumes == mediatypes.APPLICATION_JSON:
+						param_obj = None
+						body = self.request.body
+						if sys.version_info > (3,):
+							body = str(body,'utf-8')
+						if len(body)>0 and params_types[0] in [dict,str]:
 							param_obj = json.loads(body)
-						else:
+						elif len(body)>0 :
 							param_obj = convertJSON2OBJ(params_types[0],json.loads(body))
-						p_values.append(param_obj)
+						if param_obj != None:
+						        p_values.append(param_obj)
+					elif consumes == mediatypes.TEXT_PLAIN:
+						body = self.request.body
+						if len(body) >= 1:
+						        if sys.version_info > (3,):
+							        body = str(body,'utf-8')
+						        if isinstance(body,str):
+						   	        param_obj = body
+						        else:
+							        param_obj = convertJSON2OBJ(params_types[0],json.loads(body))
+						        p_values.append(param_obj)
+                                                
 					response = operation(*p_values)
 				
 					if response == None:
 						return
 
-					if produces:
-						self.set_header('Content-Type',produces)
+					if produces != None:
+                                                self.set_header('Content-Type',produces)
 
 					if manual_response:
 						return
 
-					if produces == mediatypes.APPLICATION_JSON and hasattr(response,'__module__'):
+					if (produces == mediatypes.APPLICATION_JSON or produces == None) and hasattr(response,'__module__'):
 						response = convert2JSON(response)
 					elif produces == mediatypes.APPLICATION_XML and hasattr(response,'__module__') and not isinstance(response,xml.dom.minidom.Document):
 						response = convert2XML(response)
 
-					if produces == mediatypes.APPLICATION_JSON and isinstance(response,dict):
+					if produces == None and (isinstance(response,dict) or isinstance(response,str)):
+						self.write(response)
+						self.finish()
+					elif produces == None and isinstance(response,list):
+						self.write(json.dumps(response))
+						self.finish()
+					elif produces == mediatypes.TEXT_PLAIN and isinstance(response,str):
+						self.write(response)
+						self.finish()
+					elif produces == mediatypes.APPLICATION_JSON and isinstance(response,dict):
 						self.write(response)
 						self.finish()
 					elif produces == mediatypes.APPLICATION_JSON and isinstance(response,list):

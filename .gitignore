@@ -1,5 +1,6 @@
 *.pyc
 pyrestful.egg-info/
+test/__pycache__/
 dist/
 build/
 venv/

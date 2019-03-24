@@ -1,16 +1,14 @@
 PyRestful
 ---------
 
-pyRestful is an API to develop restful services with Tornado Web Server.
+pyRestful is an API to develop restful services with Tornado Web Server. Changes were made from the last version to improve the API.
 
-We made changes from the last version to improve it and make it more easy.
-
-Last version works with Python 2 and 3+.
+Last version works with Python 2, 3.5 and 3.7.
 
 Installation
 ------------
 
-You must have installed python version 2.7, 3.5.
+Python version 2.7, 3.5+ are required.
 
 **Note:** We recommend using Python 3.5+.
 
@@ -29,12 +27,39 @@ Or you can install it using.
      
      $ pip install -U git+https://github.com/rancavil/tornado-rest.git
 
+If you want to see a complete example, you can go to demo folder and check [person_service.py](https://github.com/rancavil/tornado-rest/blob/master/demos/person_service.py).
+
+New release 0.5.1 
+-----------------
+
+It was added "syntax sugar" to define services.
+
+     import tornado.ioloop
+     import pyrestful.rest
+
+     from pyrestful.rest import get,post
+
+     class EchoService(pyrestful.rest.RestHandler):
+          @get('/echo/{name}')
+          def sayHello(self, name):
+               return {'Hello':name}
+
+     class BookService(pyrestful.rest.RestHandler):
+          @post('/book')
+          def create_book(self,book):
+               # do something...
+               return 'Book created...'
+
+     class SomeService(pyrestful.rest.RestHandler):
+          @post('/person',{'format' : 'json'}) # content-type (consumes and produces) will be application/json 
+          def create_person_json(self,book):
+               # do something with book in format json
+               return {'status' : 'person created...'} 
+
 Example
 -------
 
-This API allows develop rest services to access resources.
-
-The API allows develop a CRUD (Create, Read, Update and Delete) over the resources. In this example the 
+The API allows developing a CRUD (Create, Read, Update and Delete) over the resources. In this example the 
 resource is Customer.
 
 First, start the service:
@@ -86,7 +111,7 @@ PyRestful implements the verbs get, post, put and delete.
 Echo Rest Service
 -----------------
 
-This example implements a Echo Rest Service (echo_service.py).
+This example implements an echo rest service (echo_service.py).
 
 Write the next code and save echo_service.py file.
 
@@ -110,14 +135,14 @@ Write the next code and save echo_service.py file.
           except KeyboardInterrupt:
                print("\nStop the echo service")
 
-Execute the service with.
+You can execute the service.
 
      $ python echo_service.py
 
 Then in a browser write the url.
      
-     http://localhost:8080/echo/rodrigo
+     http://localhost:8080/echo/john
 
 You should see the following output in your browser.
 
-     {"Hello": "rodrigo"}
+     {"Hello": "john"}

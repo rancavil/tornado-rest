@@ -25,19 +25,33 @@ if sys.version_info > (3,):
 	unicode = str
 	str = bytes
 
-def convert(value, type):
+def convert_primitive(value):
+        if isinstance(value,unicode):
+            return value
+        elif isinstance(value,str):
+            value = unicode(value,'utf-8')
+            if value.isdigit():
+                return long(value)
+            elif value.isalnum():
+                if value.upper() == 'TRUE':
+                    return True
+                if value.upper() == 'FALSE':
+                    return False
+                return value
+
+def convert(value, data_type):
 	""" Convert / Cast function """
-	if issubclass(type,str) and not (value.upper() in ['FALSE','TRUE']):
+	if issubclass(data_type,str) and not (value.upper() in ['FALSE','TRUE']):
 		return value.decode('utf-8')
-	elif issubclass(type,unicode):
-		return unicode(value)
-	elif issubclass(type,int):
+	elif issubclass(data_type,unicode):
+		return convert_primitive(value)
+	elif issubclass(data_type,int):
 		return int(value)
-	elif issubclass(type,long):
+	elif issubclass(data_type,long):
 		return long(value)
-	elif issubclass(type,float):
+	elif issubclass(data_type,float):
 		return float(value)
-	elif issubclass(type,boolean) and (value.upper() in ['FALSE','TRUE']):
+	elif issubclass(data_type,boolean) and (value.upper() in ['FALSE','TRUE']):
 		if str(value).upper() == 'TRUE': return True
 		elif str(value).upper() == 'FALSE': return False
 	else:

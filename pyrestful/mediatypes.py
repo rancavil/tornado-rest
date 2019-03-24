@@ -19,3 +19,4 @@
 APPLICATION_JSON = 'application/json'
 APPLICATION_XML  = 'application/xml'
 TEXT_XML = 'text/xml'
+TEXT_PLAIN = 'text/plain'
