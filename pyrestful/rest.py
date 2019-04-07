@@ -88,7 +88,7 @@ def config(func,method,*params,**kwparams):
 	operation.func_name       = func.__name__
 	operation._func_params    = inspect.getargspec(func).args[1:]
 	operation._types          = types or [str]*len(operation._func_params)
-	operation._service_name   = re.findall(r'(?<=/)\w+',path)
+	operation._service_name   = re.findall(r'(?<=/)[a-zA-z0-9\.\-]+',path)
 	operation._service_params = re.findall(r'(?<={)\w+',path)
 	operation._method         = method
 	operation._produces       = produces
@@ -170,6 +170,8 @@ class RestHandler(tornado.web.RequestHandler):
 
 		if method not in http_methods:
 			raise tornado.web.HTTPError(405,'The service not have %s verb'%method)
+		if path[1] not in list(op._path.split('/')[1] for op in list(map(lambda o: getattr(self,o),functions))):
+			raise tornado.web.HTTPError(404,'404 Not Found {}'.format(path[1]))
 		for operation in list(map(lambda op: getattr(self,op), functions)):
 			service_name          = getattr(operation,'_service_name')
 			service_params        = getattr(operation,'_service_params')

@@ -43,9 +43,22 @@ class personservice(RestHandler):
     def post_person(self,person):
         return {'status' : 'person {} received'.format(person.id)}
 
+class echoservice(RestHandler):
+    @get('/test.asp')
+    def test_data(self):
+        return {'status' : 'Ok'}
+
+    @get('/data.asp/{name}')
+    def get_data(self,name):
+        return {'hello' : name}
+
+    @post('/data.asp')
+    def post_data(self,data):
+        return {'received' : data}
+
 class TestService(AsyncHTTPTestCase):
     def get_app(self):
-        return RestService([simpleservice,bookservice,personservice,])
+        return RestService([simpleservice,bookservice,personservice,echoservice,])
 
     def test_get_string(self):
         response = self.fetch('/echo/TEST')
@@ -86,6 +99,14 @@ class TestService(AsyncHTTPTestCase):
         self.assertEqual(person['idperson'],1)
         self.assertEqual(person['name'],'Ada')
 
+    def test_get_person(self):
+        response = self.fetch('/person')
+        person = json.loads(response.body)
+        self.assertEqual(response.code,200)
+        self.assertIn('application/json',response.headers['Content-Type'])
+        self.assertEqual(person['idperson'],1)
+        self.assertEqual(person['name'],'Ada')
+
     def test_post_person(self):
         person = {'id' : 1,'name' : 'Ada'}
         response = self.fetch('/person',method='POST',body=json.dumps(person),headers={'content-type' : 'application/json'})
@@ -93,3 +114,28 @@ class TestService(AsyncHTTPTestCase):
         self.assertEqual(response.code,200)
         self.assertIn('application/json',response.headers['Content-Type'])
         self.assertDictEqual(response_json,{'status':'person 1 received'})
+
+    def test_test_1_data(self):
+        response = self.fetch('/test.asp')
+        data = json.loads(response.body)
+        self.assertEqual(response.code,200)
+        self.assertIn('application/json',response.headers['Content-Type'])
+        self.assertEqual(data['status'],'Ok')
+
+    def test_test_2_data(self):
+        response = self.fetch('/test_asp')
+        self.assertEqual(response.code,404)
+
+    def test_get_data(self):
+        response = self.fetch('/data.asp/jonnhy')
+        data = json.loads(response.body)
+        self.assertEqual(response.code,200)
+        self.assertIn('application/json',response.headers['Content-Type'])
+        self.assertEqual(data['hello'],'jonnhy')
+
+    def test_post_data(self):
+        response = self.fetch('/data.asp',method='POST',body=json.dumps({'id' : 123456}),headers={'content-type' : 'application/json'})
+        response_json = json.loads(response.body)
+        self.assertEqual(response.code,200)
+        self.assertDictEqual(response_json['received'],{'id':123456})
+

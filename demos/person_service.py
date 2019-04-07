@@ -34,7 +34,7 @@ class PersonService(pyrestful.rest.RestHandler):
         p.name = 'Mr.Robot'
         return p
 
-    @post('/person',{'format':'json'})
+    @post('/person',{'format':'json'},_catch_fire=True)
     def postPerson(self,person):
         return {'status':'person OK', 'person' : person}
 
