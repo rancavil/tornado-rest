@@ -25,6 +25,7 @@ import inspect
 import re
 import json
 import sys
+import asyncio
 
 from pyrestful import mediatypes, types
 from pyconvert.pyconv import convertXML2OBJ, convert2XML, convertJSON2OBJ, convert2JSON
@@ -134,27 +135,27 @@ def delete(*params, **kwparams):
 	return method
 
 class RestHandler(tornado.web.RequestHandler):
-	def get(self):
+	async def get(self):
 		""" Executes get method """
-		self._exe('GET')
+		await self._exe('GET')
 
-	def post(self):
+	async def post(self):
 		""" Executes post method """
-		self._exe('POST')
+		await self._exe('POST')
 
-	def put(self):
+	async def put(self):
 		""" Executes put method """
-		self._exe('PUT')
+		await self._exe('PUT')
 
-	def patch(self):
+	async def patch(self):
 		""" Executes patch method """
-		self._exe('PATCH')
+		await self._exe('PATCH')
 
-	def delete(self):
+	async def delete(self):
 		""" Executes put method """
-		self._exe('DELETE')
+		await self._exe('DELETE')
 
-	def _exe(self, method):
+	async def _exe(self, method):
 		""" Executes the python function for the Rest Service """
 		request_path = self.request.path
 		path = request_path.split('/')
@@ -226,6 +227,8 @@ class RestHandler(tornado.web.RequestHandler):
 						        p_values.append(param_obj)
                                                 
 					response = operation(*p_values)
+					if asyncio.isfuture(response) or asyncio.iscoroutine(response):
+						response = await response
 				
 					if response == None:
 						return
